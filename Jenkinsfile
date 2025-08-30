@@ -1,11 +1,15 @@
 pipeline {
     agent any
+    
+    environment {
+        DOCKER_NODE_IMG = "node:18-alpine"
+    }
 
     stages {
         stage('Build') {
             agent{
                 docker{
-                    image 'node:22-alpine'
+                    image $DOCKER_NODE_IMG
                     reuseNode true
                 }
             }
@@ -23,7 +27,7 @@ pipeline {
         stage('Testing') {
             agent{
                 docker{
-                    image 'node:22-alpine'
+                    image $DOCKER_NODE_IMG
                     reuseNode true
                 }
             }
