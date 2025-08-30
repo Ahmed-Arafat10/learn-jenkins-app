@@ -9,7 +9,7 @@ pipeline {
         stage('Build') {
             agent{
                 docker{
-                    image $DOCKER_NODE_IMG
+                    image ${DOCKER_NODE_IMG}
                     reuseNode true
                 }
             }
@@ -27,7 +27,7 @@ pipeline {
         stage('Testing') {
             agent{
                 docker{
-                    image $DOCKER_NODE_IMG
+                    image ${DOCKER_NODE_IMG}
                     reuseNode true
                 }
             }
