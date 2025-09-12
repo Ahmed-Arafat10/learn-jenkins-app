@@ -42,6 +42,22 @@ pipeline {
                 '''
             }
         }
+        stage('E2E') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.43.0-focal' 
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                npm install serve
+                node_module/.bin/serve -s build &
+                sleep 10
+                npx playwright test
+                '''
+            }
+        }
     }
     post {
         always {
