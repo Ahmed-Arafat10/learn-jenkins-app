@@ -10,8 +10,21 @@ pipeline {
             }
             steps {
                 sh '''
+                echo "=== Workspace before build ==="
+                ls  -lah
+
+                echo "=== Node & NPM versions ==="
                 node -v
                 npm -v
+
+                echo "=== Installing dependencies ==="
+                npm ci
+
+                echo "=== Running build ==="
+                npm run build                    
+
+                echo "=== Workspace after build ==="
+                ls -lah
                 '''
             }
         }
