@@ -49,7 +49,7 @@ pipeline {
                     }
                     post {
                         always {
-                                junit 'jest-results/*.xml'
+                            junit 'jest-results/*.xml'
                         }
                     }
                 }
@@ -77,18 +77,32 @@ pipeline {
                 }
             }
         }
-        stage('Deploy') {
+        stage('Deploy To Development') {
             agent {
                 docker {
                     image 'node:18-alpine'
                     reuseNode true
                 }
             }
-
             steps {
                 sh '''
                 npm install netlify-cli@20.1.1
                 node_modules/.bin/netlify --version
+                echo "Deploying to development, Site ID : $NETLIFY_SITE_ID"
+                node_modules/.bin/netlify status
+                node_modules/.bin/netlify deploy --dir=build
+                '''
+            }
+        }
+        stage('Deploy To Production') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
                 echo "Deploying to production, Site ID : $NETLIFY_SITE_ID"
                 node_modules/.bin/netlify status
                 node_modules/.bin/netlify deploy --dir=build --prod
@@ -96,29 +110,29 @@ pipeline {
             }
         }
         stage('Production E2E Test') {
-                    agent {
-                        docker {
-                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
-                            reuseNode true
-                        }
-                    }
-                    environment {
-                        CI_ENVIRONMENT_URL = 'https://jenkins-cd.netlify.app/'
-                    }
-                    steps {
-                        sh '''
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    reuseNode true
+                }
+            }
+            environment {
+                CI_ENVIRONMENT_URL = 'https://jenkins-cd.netlify.app/'
+            }
+            steps {
+                sh '''
                         npm install serve
                         node_modules/.bin/serve -s build &
                         ls
                         sleep 10
                         npx playwright test --reporter=html
                       '''
-                    }
-                    post {
-                        always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod - Playwright HTML Report', reportTitles: '', useWrapperFileDirectly: true])
-                        }
-                    }
+            }
+            post {
+                always {
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod - Playwright HTML Report', reportTitles: '', useWrapperFileDirectly: true])
                 }
+            }
+        }
     }
 }
