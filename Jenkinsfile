@@ -84,6 +84,7 @@ pipeline {
                     reuseNode true
                 }
             }
+            
             steps {
                 sh '''
                 npm install netlify-cli@20.1.1
