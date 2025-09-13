@@ -86,12 +86,39 @@ pipeline {
             }
             steps {
                 sh '''
-                npm install netlify-cli@20.1.1
+                npm install netlify-cli@20.1.1 node-jq
                 node_modules/.bin/netlify --version
                 echo "Deploying to development, Site ID : $NETLIFY_SITE_ID"
                 node_modules/.bin/netlify status
-                node_modules/.bin/netlify deploy --dir=build
+                node_modules/.bin/netlify deploy --dir=build --json > deploy-dev-output.json
                 '''
+                script {
+                    env.NETLIFY_DEV_URL = sh(script: "node_modules/.bin/node-jq -r '.deploy_url' deploy-dev-output.json", returnStdout: true)
+                }
+            }
+        }
+        stage('Development E2E Test') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    reuseNode true
+                }
+            }
+            environment {
+                CI_ENVIRONMENT_URL = "${env.NETLIFY_DEV_URL}"
+            }
+            steps {
+                sh '''
+                        node_modules/.bin/serve -s build &
+                        ls
+                        sleep 10
+                        npx playwright test --reporter=html
+                   '''
+            }
+            post {
+                always {
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Dev - Playwright HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+                }
             }
         }
         stage('Approve To Deploy Production'){
@@ -128,7 +155,6 @@ pipeline {
             }
             steps {
                 sh '''
-                        npm install serve
                         node_modules/.bin/serve -s build &
                         ls
                         sleep 10
