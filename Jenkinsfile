@@ -54,6 +54,7 @@ pipeline {
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.43.0-focal'
+                    reuseNode true
                 }
             }
             steps {
