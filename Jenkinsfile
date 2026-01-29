@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Hello') {
             steps {
-                echo 'Hello Jenkins! -- updated'
+                echo 'Hello Jenkins! -- updated2'
             }
         }
     }
