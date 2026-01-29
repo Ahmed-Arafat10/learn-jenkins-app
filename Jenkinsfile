@@ -5,7 +5,7 @@ pipeline {
         stage('Build') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'node:14-alpine'
                     // not required
                     // args '-u root:root' // run as root to avoid permission issues
                     reuseNode true
