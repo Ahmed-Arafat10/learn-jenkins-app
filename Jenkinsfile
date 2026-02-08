@@ -101,9 +101,32 @@ pipeline {
                 --dir=build \
                 --no-build \
                 --site $NETLIFY_SITE_ID \
-                --auth $NETLIFY_AUTH_TOKEN
+                --auth $NETLIFY_AUTH_TOKEN \
+                --json > deploy-dev-output.json
                 '''
             }
+        }
+        stage('Prod (E2E) Test') {
+                    agent {
+                        docker {
+                            // any other version will not work
+                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            reuseNode true
+                        }
+                    }
+                    environment {
+                        CI_ENVIRONMENT_URL = 'https://jenkins26-cicd.netlify.app'
+                    }
+                    steps {
+                        sh '''
+                        npx playwright test --reporter=html
+                        '''
+                    }
+                    post {
+                        always {
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index2.html', reportName: 'Prod - Playwright HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+                        }
+                    }
         }
     }
 }
