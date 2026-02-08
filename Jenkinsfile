@@ -96,7 +96,12 @@ pipeline {
                 echo "Deploying to Netlify, Site ID: ${NETLIFY_SITE_ID}"
                 ./node_modules/.bin/netlify status
                 ls -lah
-                ./node_modules/.bin/netlify deploy --prod --dir=build
+                ./node_modules/.bin/netlify deploy \
+                --prod \
+                --dir=build \
+                --no-build \
+                --site $NETLIFY_SITE_ID \
+                --auth $NETLIFY_AUTH_TOKEN
                 '''
             }
         }
