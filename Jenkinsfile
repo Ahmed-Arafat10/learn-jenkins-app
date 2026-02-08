@@ -95,7 +95,7 @@ pipeline {
                 ./node_modules/.bin/netlify --version
                 echo "Deploying to Netlify, Site ID: ${NETLIFY_SITE_ID}"
                 ./node_modules/.bin/netlify status
-                ./node_modules/.bin/netlify deploy --prod --dir=build --message="Deploying from Jenkins pipeline" --site=${NETLIFY_SITE_ID} --auth=${NETLIFY_AUTH_TOKEN} --json > deploy-result.json
+                ./node_modules/.bin/netlify deploy --prod --dir=build
                 '''
             }
         }
