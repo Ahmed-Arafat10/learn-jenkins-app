@@ -82,7 +82,7 @@ pipeline {
                 }
             }
         }
-        stage('Deploy') {
+        stage('Deploy In Staging') {
             agent {
                 docker {
                     image 'node:18-alpine'
@@ -91,42 +91,59 @@ pipeline {
             }
             steps {
                 sh '''
-                npm install netlify-cli
-                ./node_modules/.bin/netlify --version
-                echo "Deploying to Netlify, Site ID: ${NETLIFY_SITE_ID}"
-                ./node_modules/.bin/netlify status
-                ls -lah
-                ./node_modules/.bin/netlify deploy \
-                --prod \
-                --dir=build \
-                --no-build \
-                --site $NETLIFY_SITE_ID \
-                --auth $NETLIFY_AUTH_TOKEN \
-                --json > deploy-dev-output.json
+                    npm install netlify-cli
+                    node_modules/.bin/netlify --version
+                    echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
+                    node_modules/.bin/netlify status
+                    node_modules/.bin/netlify deploy --dir=build
                 '''
             }
         }
-        stage('Prod (E2E) Test') {
-                    agent {
-                        docker {
-                            // any other version will not work
-                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
-                            reuseNode true
-                        }
-                    }
-                    environment {
-                        CI_ENVIRONMENT_URL = 'https://jenkins26-cicd.netlify.app'
-                    }
-                    steps {
-                        sh '''
-                        npx playwright test --reporter=html
-                        '''
-                    }
-                    post {
-                        always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod - Playwright HTML Report', reportTitles: 'Prod - Playwright HTML Report', useWrapperFileDirectly: true])
-                        }
-                    }
-        }
+        // stage('Deploy') {
+        //     agent {
+        //         docker {
+        //             image 'node:18-alpine'
+        //             reuseNode true
+        //         }
+        //     }
+        //     steps {
+        //         sh '''
+        //         npm install netlify-cli
+        //         ./node_modules/.bin/netlify --version
+        //         echo "Deploying to Netlify, Site ID: ${NETLIFY_SITE_ID}"
+        //         ./node_modules/.bin/netlify status
+        //         ls -lah
+        //         ./node_modules/.bin/netlify deploy \
+        //         --prod \
+        //         --dir=build \
+        //         --no-build \
+        //         --site $NETLIFY_SITE_ID \
+        //         --auth $NETLIFY_AUTH_TOKEN \
+        //         --json > deploy-output.json
+        //         '''
+        //     }
+        // }
+        // stage('Prod (E2E) Test') {
+        //             agent {
+        //                 docker {
+        //                     // any other version will not work
+        //                     image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+        //                     reuseNode true
+        //                 }
+        //             }
+        //             environment {
+        //                 CI_ENVIRONMENT_URL = 'https://jenkins26-cicd.netlify.app'
+        //             }
+        //             steps {
+        //                 sh '''
+        //                 npx playwright test --reporter=html
+        //                 '''
+        //             }
+        //             post {
+        //                 always {
+        //                     publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod - Playwright HTML Report', reportTitles: 'Prod - Playwright HTML Report', useWrapperFileDirectly: true])
+        //                 }
+        //             }
+        // }
     }
 }
