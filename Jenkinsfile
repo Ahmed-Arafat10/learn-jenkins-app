@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        NETFIFLY_SITE_ID = '4c33091d-a993-4563-90be-7aeb971edbbd'
+        NETLIFY_SITE_ID = '4c33091d-a993-4563-90be-7aeb971edbbd'
         // Note: Netfliy check for env variable called NETLIFY_AUTH_TOKEN to authonticate, so we need to use that name
         NETLIFY_AUTH_TOKEN = credentials('netlify-token')
     }
@@ -92,7 +92,7 @@ pipeline {
                 sh '''
                 npm install netlify-cli
                 ./node_modules/.bin/netlify --version
-                echo "Deploying to Netlify, Site ID: ${NETFIFLY_SITE_ID}"
+                echo "Deploying to Netlify, Site ID: ${NETLIFY_SITE_ID}"
                 ./node_modules/.bin/netlify status
                 '''
             }
