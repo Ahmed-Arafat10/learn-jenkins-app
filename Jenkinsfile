@@ -1,6 +1,7 @@
 pipeline {
     agent any
     environment {
+        // Note: Netfliy check for env variable called NETLIFY_SITE_ID to identify the site, so we need to use that name
         NETLIFY_SITE_ID = '4c33091d-a993-4563-90be-7aeb971edbbd'
         // Note: Netfliy check for env variable called NETLIFY_AUTH_TOKEN to authonticate, so we need to use that name
         NETLIFY_AUTH_TOKEN = credentials('netlify-token')
