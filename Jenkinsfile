@@ -69,7 +69,6 @@ pipeline {
                     steps {
                         sh '''
                         npx serve -s build &
-                        node_modules/.bin/serve -s build &
                         sleep 10
                         npx playwright test --reporter=html
                         '''
@@ -91,11 +90,10 @@ pipeline {
             }
             steps {
                 sh '''
-                    npm install netlify-cli node-jq
-                    node_modules/.bin/netlify --version
+                    npx netlify --version
                     echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
-                    node_modules/.bin/netlify status
-                    node_modules/.bin/netlify deploy \
+                    npx netlify status
+                    npx netlify deploy \
                     --dir=build \
                     --no-build \
                     --site $NETLIFY_SITE_ID \
@@ -103,7 +101,7 @@ pipeline {
                     --json > netlify-deploy-stage.json
                 '''
                 script {
-                    env.NETLIFY_STAGE_URL = sh(script: "node_modules/.bin/node-jq -r '.deploy_url' netlify-deploy-stage.json", returnStdout: true).trim()
+                    env.NETLIFY_STAGE_URL = sh(script: "npx node-jq -r '.deploy_url' netlify-deploy-stage.json", returnStdout: true).trim()
                 }
             }
         }
@@ -145,12 +143,11 @@ pipeline {
             }
             steps {
                 sh '''
-                npm install netlify-cli
-                ./node_modules/.bin/netlify --version
+                npx netlify --version
                 echo "Deploying to Netlify, Site ID: ${NETLIFY_SITE_ID}"
-                ./node_modules/.bin/netlify status
+                npx netlify status
                 ls -lah
-                ./node_modules/.bin/netlify deploy \
+                npx netlify deploy \
                 --prod \
                 --dir=build \
                 --no-build \
@@ -159,7 +156,7 @@ pipeline {
                 --json > netlify-deploy-prod.json
                 '''
                 script {
-                    env.NETLIFY_PROD_URL = sh(script: "node_modules/.bin/node-jq -r '.url' netlify-deploy-prod.json", returnStdout: true).trim()
+                    env.NETLIFY_PROD_URL = sh(script: "npx node-jq -r '.url' netlify-deploy-prod.json", returnStdout: true).trim()
                 }
             }
         }

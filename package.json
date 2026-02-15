@@ -38,7 +38,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.39.0",
-    "@types/node": "^20.8.6"
+    "@types/node": "^20.8.6",
+    "netlify-cli": "^21.6.0",
+    "node-jq": "^6.3.1"
   },
   "jest-junit": {
     "suiteName": "jest tests",
