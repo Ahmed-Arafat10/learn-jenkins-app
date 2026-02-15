@@ -25,11 +25,8 @@ pipeline {
                     node --version
                     npm --version
 
-                    echo "Setting npm cache directory"
-                    npm config set cache .npm --global
-
                     echo "Installing dependencies with cache"
-                    npm ci --prefer-offline
+                    npm ci --cache .npm --prefer-offline
 
                     echo "=== Running build ==="
                     npm run build
