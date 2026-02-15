@@ -91,7 +91,7 @@ pipeline {
             }
             steps {
                 sh '''
-                    npm install netlify-cli
+                    npm install netlify-cli node-jq
                     node_modules/.bin/netlify --version
                     echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
                     node_modules/.bin/netlify status
@@ -100,55 +100,87 @@ pipeline {
                     --no-build \
                     --site $NETLIFY_SITE_ID \
                     --auth $NETLIFY_AUTH_TOKEN \
-                    --json > deploy-output.json
+                    --json > netlify-deploy-stage.json
+                '''
+                script {
+                    env.NETLIFY_STAGE_URL = sh(script: "node_modules/.bin/node=jq -r '.deploy_url' netlify-deploy-stage.json", returnStdout: true).trim()
+                }
+            }
+        }
+        stage('Staging E2E Test'){
+                agent {
+                    docker {
+                        // any other version will not work
+                        image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                        reuseNode true
+                    }
+                }
+                environment {
+                    CI_ENVIRONMENT_URL = "${env.NETLIFY_STAGE_URL}"
+                }
+                steps {
+                    sh '''
+                    npx playwright test --reporter=html
+                    '''
+                }
+                post {
+                always {
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Staging E2E Test', reportTitles: '', useWrapperFileDirectly: true])
+                }
+            }
+        }
+        stage('Approval') {
+            steps {
+                timeout(time: 15, unit: 'MINUTES') {
+                    input message: 'Do you wish to deploy to production?', ok: 'Yes, I am sure!'
+                }
+            }
+        }
+        stage('Deploy Production') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                npm install netlify-cli
+                ./node_modules/.bin/netlify --version
+                echo "Deploying to Netlify, Site ID: ${NETLIFY_SITE_ID}"
+                ./node_modules/.bin/netlify status
+                ls -lah
+                ./node_modules/.bin/netlify deploy \
+                --prod \
+                --dir=build \
+                --no-build \
+                --site $NETLIFY_SITE_ID \
+                --auth $NETLIFY_AUTH_TOKEN \
+                --json > netlify-deploy-prod.json
                 '''
             }
         }
-        // stage('Deploy') {
-        //     agent {
-        //         docker {
-        //             image 'node:18-alpine'
-        //             reuseNode true
-        //         }
-        //     }
-        //     steps {
-        //         sh '''
-        //         npm install netlify-cli
-        //         ./node_modules/.bin/netlify --version
-        //         echo "Deploying to Netlify, Site ID: ${NETLIFY_SITE_ID}"
-        //         ./node_modules/.bin/netlify status
-        //         ls -lah
-        //         ./node_modules/.bin/netlify deploy \
-        //         --prod \
-        //         --dir=build \
-        //         --no-build \
-        //         --site $NETLIFY_SITE_ID \
-        //         --auth $NETLIFY_AUTH_TOKEN \
-        //         --json > deploy-output.json
-        //         '''
-        //     }
-        // }
-        // stage('Prod (E2E) Test') {
-        //             agent {
-        //                 docker {
-        //                     // any other version will not work
-        //                     image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
-        //                     reuseNode true
-        //                 }
-        //             }
-        //             environment {
-        //                 CI_ENVIRONMENT_URL = 'https://jenkins26-cicd.netlify.app'
-        //             }
-        //             steps {
-        //                 sh '''
-        //                 npx playwright test --reporter=html
-        //                 '''
-        //             }
-        //             post {
-        //                 always {
-        //                     publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod - Playwright HTML Report', reportTitles: 'Prod - Playwright HTML Report', useWrapperFileDirectly: true])
-        //                 }
-        //             }
-        // }
+        stage('Prod (E2E) Test') {
+                    agent {
+                        docker {
+                            // any other version will not work
+                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            reuseNode true
+                        }
+                    }
+                    environment {
+                        CI_ENVIRONMENT_URL = 'https://jenkins26-cicd.netlify.app'
+                    }
+                    steps {
+                        sh '''
+                        npx playwright test --reporter=html
+                        '''
+                    }
+                    post {
+                        always {
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod - Playwright HTML Report', reportTitles: 'Prod - Playwright HTML Report', useWrapperFileDirectly: true])
+                        }
+                    }
+        }
     }
 }
