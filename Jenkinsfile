@@ -69,7 +69,7 @@ pipeline {
                     steps {
                         sh '''
                         npx serve -s build &
-                        sleep 10
+                        npx wait-on http://localhost:3000
                         npx playwright test --reporter=html
                         '''
                     }
