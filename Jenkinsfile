@@ -42,7 +42,7 @@ pipeline {
                     agent {
                         docker {
                             //Note: not same node version as above
-                            image 'node:14-alpine'
+                            image 'node:18-alpine'
                             reuseNode true
                         }
                     }
