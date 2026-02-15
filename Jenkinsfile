@@ -183,4 +183,20 @@ pipeline {
                     }
         }
     }
+    post {
+    success {
+        slackSend(
+            channel: '#jenkins',
+            color: 'good',
+            message: "✅ Production deployed successfully: ${env.NETLIFY_PROD_URL}"
+        )
+    }
+    failure {
+        slackSend(
+            channel: '#jenkins',
+            color: 'danger',
+            message: "❌ Production deployment FAILED in job ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+        )
+    }
+}
 }
