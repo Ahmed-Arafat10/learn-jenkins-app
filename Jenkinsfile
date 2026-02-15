@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         // Note: Netfliy check for env variable called NETLIFY_SITE_ID to identify the site, so we need to use that name
-        NETLIFY_SITE_ID = '4c33091d-a993-4563-90be-7aeb971edbbd'
+        NETLIFY_SITE_ID = credentials('netlify-site-id')
         // Note: Netfliy check for env variable called NETLIFY_AUTH_TOKEN to authonticate, so we need to use that name
         NETLIFY_AUTH_TOKEN = credentials('netlify-token')
     }
@@ -68,7 +68,7 @@ pipeline {
                     }
                     steps {
                         sh '''
-                        npm install serve
+                        npx serve -s build &
                         node_modules/.bin/serve -s build &
                         sleep 10
                         npx playwright test --reporter=html
@@ -158,6 +158,9 @@ pipeline {
                 --auth $NETLIFY_AUTH_TOKEN \
                 --json > netlify-deploy-prod.json
                 '''
+                script {
+                    env.NETLIFY_PROD_URL = sh(script: "node_modules/.bin/node-jq -r '.url' netlify-deploy-prod.json", returnStdout: true).trim()
+                }
             }
         }
         stage('Prod (E2E) Test') {
@@ -169,7 +172,7 @@ pipeline {
                         }
                     }
                     environment {
-                        CI_ENVIRONMENT_URL = 'https://jenkins26-cicd.netlify.app'
+                        CI_ENVIRONMENT_URL = "${env.NETLIFY_PROD_URL}"
                     }
                     steps {
                         sh '''
