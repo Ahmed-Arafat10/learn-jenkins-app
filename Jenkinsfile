@@ -8,6 +8,22 @@ pipeline {
         REACT_APP_VERSION = "1.0.$BUILD_ID" // Example of using Jenkins build number as part of app version
     }
     stages {
+        stage('Notify Start') {
+            steps {
+                script {
+                    slackSend(
+                        channel: '#jenkins',
+                        color: '#439FE0',
+                        message: "🚀 Build Started!\n" +
+                                 "Job: ${env.JOB_NAME}\n" +
+                                 "Build ID: ${env.BUILD_ID}\n" +
+                                 "Build Number: ${env.BUILD_NUMBER}\n" +
+                                 "Triggered By: ${currentBuild.getBuildCauses()[0]?.shortDescription}"
+                    )
+                }
+            }
+        }
+
         stage('Build') {
             agent {
                 docker {
@@ -106,7 +122,7 @@ pipeline {
                 }
             }
         }
-        stage('Staging E2E Test'){
+        stage('Staging E2E Test') {
                 agent {
                     docker {
                         // any other version will not work
@@ -126,7 +142,7 @@ pipeline {
                 always {
                     publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Staging E2E Test', reportTitles: '', useWrapperFileDirectly: true])
                 }
-            }
+                }
         }
         stage('Deploy Production') {
             agent {
@@ -178,19 +194,19 @@ pipeline {
         }
     }
     post {
-    success {
-        slackSend(
+        success {
+            slackSend(
             channel: '#jenkins',
             color: 'good',
             message: "✅ Production deployed successfully: ${env.NETLIFY_PROD_URL}"
         )
-    }
-    failure {
-        slackSend(
+        }
+        failure {
+            slackSend(
             channel: '#jenkins',
             color: 'danger',
             message: "❌ Production deployment FAILED in job ${env.JOB_NAME} #${env.BUILD_NUMBER}"
         )
+        }
     }
-}
 }
