@@ -5,6 +5,7 @@ pipeline {
         NETLIFY_SITE_ID = credentials('netlify-site-id')
         // Note: Netfliy check for env variable called NETLIFY_AUTH_TOKEN to authonticate, so we need to use that name
         NETLIFY_AUTH_TOKEN = credentials('netlify-token')
+        REACT_APP_VERSION = "1.0.$BUILD_ID" // Example of using Jenkins build number as part of app version
     }
     stages {
         stage('Build') {
