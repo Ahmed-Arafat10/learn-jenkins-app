@@ -103,7 +103,7 @@ pipeline {
                     --json > netlify-deploy-stage.json
                 '''
                 script {
-                    env.NETLIFY_STAGE_URL = sh(script: "node_modules/.bin/node=jq -r '.deploy_url' netlify-deploy-stage.json", returnStdout: true).trim()
+                    env.NETLIFY_STAGE_URL = sh(script: "node_modules/.bin/node-jq -r '.deploy_url' netlify-deploy-stage.json", returnStdout: true).trim()
                 }
             }
         }
