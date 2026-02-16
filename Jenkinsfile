@@ -17,7 +17,7 @@ pipeline {
         stage('Build') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'my-playwright'
                     // not required
                     reuseNode true
                 }
@@ -48,7 +48,7 @@ pipeline {
                     agent {
                         docker {
                             //Note: not same node version as above
-                            image 'node:18-alpine'
+                            image 'my-playwright'
                             reuseNode true
                         }
                     }
@@ -90,7 +90,7 @@ pipeline {
         stage('Deploy In Staging') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'my-playwright'
                     reuseNode true
                 }
             }
@@ -136,7 +136,7 @@ pipeline {
         stage('Deploy Production') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'my-playwright'
                     reuseNode true
                 }
             }
