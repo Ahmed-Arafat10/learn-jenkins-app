@@ -107,7 +107,7 @@ pipeline {
                     --json > netlify-deploy-stage.json
                 '''
                 script {
-                    env.NETLIFY_STAGE_URL = sh(script: "npx node-jq -r '.deploy_url' netlify-deploy-stage.json", returnStdout: true).trim()
+                    env.NETLIFY_STAGE_URL = sh(script: "jq -r '.deploy_url' netlify-deploy-stage.json", returnStdout: true).trim()
                 }
             }
         }
@@ -155,7 +155,7 @@ pipeline {
                 --json > netlify-deploy-prod.json
                 '''
                 script {
-                    env.NETLIFY_PROD_URL = sh(script: "npx node-jq -r '.url' netlify-deploy-prod.json", returnStdout: true).trim()
+                    env.NETLIFY_PROD_URL = sh(script: "jq -r '.url' netlify-deploy-prod.json", returnStdout: true).trim()
                 }
             }
         }

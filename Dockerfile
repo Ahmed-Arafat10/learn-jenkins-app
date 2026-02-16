@@ -6,5 +6,7 @@ RUN npm install -g \
     serve@latest \
     wait-on@latest
 
-# Avoid npm update notifier (small speed gain)
-ENV NPM_CONFIG_UPDATE_NOTIFIER=false
+RUN apt update && \
+    apt install -y jq && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
