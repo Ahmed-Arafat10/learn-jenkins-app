@@ -1,5 +1,4 @@
-FROM mcr.microsoft.com/playwright:v1.41.2-jammy
-
+FROM mcr.microsoft.com/playwright:v1.39.0-jammy
 # Install global CLI tools once (faster than using npx every time)
 RUN npm install -g \
     netlify-cli@latest \
