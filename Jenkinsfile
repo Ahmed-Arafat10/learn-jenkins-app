@@ -8,11 +8,12 @@ pipeline {
         REACT_APP_VERSION = "1.0.$BUILD_ID" // Example of using Jenkins build number as part of app version
     }
     stages {
-        stage('Docker') {
-            steps {
-                sh 'docker build -t my-playwright .'
-            }
-        }
+        // build in mightly jenkins pipeline, but not in main pipeline, because we want to build the docker image only once a day, and use it for all the builds in that day
+        // stage('Docker') {
+        //     steps {
+        //         sh 'docker build -t my-playwright .'
+        //     }
+        // }
         stage('Build') {
             agent {
                 docker {
