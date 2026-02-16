@@ -68,7 +68,8 @@ pipeline {
                                 reportDir: 'playwright-report',
                                 reportFiles: 'index.html',
                                 reportName: 'Playwright HTML Report',
-                                useWrapperFileDirectly: true
+                                useWrapperFileDirectly: true,
+                                alwaysLinkToLastBuild: false
                             ])
                         }
                     }
@@ -114,7 +115,8 @@ pipeline {
                         reportDir: 'playwright-report',
                         reportFiles: 'index.html',
                         reportName: 'Staging E2E Test',
-                        useWrapperFileDirectly: true
+                        useWrapperFileDirectly: true,
+                        alwaysLinkToLastBuild: false
                     ])
                 }
             }
@@ -159,7 +161,8 @@ pipeline {
                         reportDir: 'playwright-report',
                         reportFiles: 'index.html',
                         reportName: 'Prod - Playwright HTML Report',
-                        useWrapperFileDirectly: true
+                        useWrapperFileDirectly: true,
+                        alwaysLinkToLastBuild: false
                     ])
                 }
             }
