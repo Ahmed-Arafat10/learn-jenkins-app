@@ -8,28 +8,16 @@ pipeline {
         REACT_APP_VERSION = "1.0.$BUILD_ID" // Example of using Jenkins build number as part of app version
     }
     stages {
-        stage('Notify Start') {
+        stage('Docker') {
             steps {
-                script {
-                    slackSend(
-                        channel: '#jenkins',
-                        color: '#439FE0',
-                        message: "🚀 Build Started!\n" +
-                                 "Job: ${env.JOB_NAME}\n" +
-                                 "Build ID: ${env.BUILD_ID}\n" +
-                                 "Build Number: ${env.BUILD_NUMBER}\n" +
-                                 "Triggered By: ${currentBuild.getBuildCauses()[0]?.shortDescription}"
-                    )
-                }
+                sh 'docker build -t my-playwright .'
             }
         }
-
         stage('Build') {
             agent {
                 docker {
                     image 'node:18-alpine'
                     // not required
-                    // args '-u root:root' // run as root to avoid permission issues
                     reuseNode true
                 }
             }
@@ -79,7 +67,7 @@ pipeline {
                     agent {
                         docker {
                             // any other version will not work
-                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            image 'my-playwright'
                             reuseNode true
                         }
                     }
@@ -126,7 +114,7 @@ pipeline {
                 agent {
                     docker {
                         // any other version will not work
-                        image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                        image 'my-playwright'
                         reuseNode true
                     }
                 }
@@ -174,7 +162,7 @@ pipeline {
                     agent {
                         docker {
                             // any other version will not work
-                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            image 'my-playwright'
                             reuseNode true
                         }
                     }
@@ -191,22 +179,6 @@ pipeline {
                             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod - Playwright HTML Report', reportTitles: 'Prod - Playwright HTML Report', useWrapperFileDirectly: true])
                         }
                     }
-        }
-    }
-    post {
-        success {
-            slackSend(
-            channel: '#jenkins',
-            color: 'good',
-            message: "✅ Production deployed successfully: ${env.NETLIFY_PROD_URL}"
-        )
-        }
-        failure {
-            slackSend(
-            channel: '#jenkins',
-            color: 'danger',
-            message: "❌ Production deployment FAILED in job ${env.JOB_NAME} #${env.BUILD_NUMBER}"
-        )
         }
     }
 }
