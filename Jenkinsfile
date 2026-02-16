@@ -3,52 +3,46 @@ pipeline {
         docker {
             image 'my-playwright'
             reuseNode true
+            args '-v $HOME/.npm:/root/.npm'
         }
     }
-    environment {
-        // Note: Netfliy check for env variable called NETLIFY_SITE_ID to identify the site, so we need to use that name
-        NETLIFY_SITE_ID = credentials('netlify-site-id')
-        // Note: Netfliy check for env variable called NETLIFY_AUTH_TOKEN to authonticate, so we need to use that name
-        NETLIFY_AUTH_TOKEN = credentials('netlify-token')
-        REACT_APP_VERSION = "1.0.$BUILD_ID" // Example of using Jenkins build number as part of app version
+
+    options {
+        durabilityHint('PERFORMANCE_OPTIMIZED')
     }
+
+    environment {
+        NETLIFY_SITE_ID = credentials('netlify-site-id')
+        NETLIFY_AUTH_TOKEN = credentials('netlify-token')
+        REACT_APP_VERSION = "1.0.$BUILD_ID"
+    }
+
     stages {
-        // build in mightly jenkins pipeline, but not in main pipeline, because we want to build the docker image only once a day, and use it for all the builds in that day
-        // stage('Docker') {
-        //     steps {
-        //         sh 'docker build -t my-playwright .'
-        //     }
-        // }
+
         stage('Build') {
-            
             steps {
                 sh '''
-                    echo "=== Workspace before build ==="
-                    ls -lah
-
                     echo "=== Node & NPM versions ==="
                     node --version
                     npm --version
 
-                    echo "Installing dependencies with cache"
-                    npm ci --cache .npm --prefer-offline
+                    echo "Installing dependencies (cached)"
+                    npm ci --prefer-offline
 
                     echo "=== Running build ==="
                     npm run build
-
-                    echo "=== Workspace after build ==="
-                    ls -lah
                 '''
             }
         }
+
         stage('Tests') {
             parallel {
-                stage('Unit Test') {
 
+                stage('Unit Test') {
                     steps {
                         sh '''
-                        test -f build/index.html
-                        npm test
+                            test -f build/index.html
+                            npm test
                         '''
                     }
                     post {
@@ -57,94 +51,118 @@ pipeline {
                         }
                     }
                 }
+
                 stage('End-to-End (E2E) Test') {
-
                     steps {
                         sh '''
-                        npx serve -s build &
-                        npx wait-on http://localhost:3000
-                        npx playwright test --reporter=html
+                            npx serve -s build -l 3000 &
+                            npx wait-on http://localhost:3000 --timeout 30000
+                            npx playwright test --workers=4 --reporter=html
                         '''
                     }
                     post {
                         always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report', reportTitles: 'Playwright HTML Report', useWrapperFileDirectly: true])
+                            publishHTML([
+                                allowMissing: false,
+                                keepAll: false,
+                                reportDir: 'playwright-report',
+                                reportFiles: 'index.html',
+                                reportName: 'Playwright HTML Report',
+                                useWrapperFileDirectly: true
+                            ])
                         }
                     }
                 }
             }
         }
+
         stage('Deploy In Staging') {
-
             steps {
                 sh '''
-                    npx netlify --version
-                    echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
-                    npx netlify status
+                    echo "Deploying to staging..."
                     npx netlify deploy \
-                    --dir=build \
-                    --no-build \
-                    --site $NETLIFY_SITE_ID \
-                    --auth $NETLIFY_AUTH_TOKEN \
-                    --json > netlify-deploy-stage.json
+                        --yes \
+                        --dir=build \
+                        --no-build \
+                        --site $NETLIFY_SITE_ID \
+                        --auth $NETLIFY_AUTH_TOKEN \
+                        --json > netlify-deploy-stage.json
                 '''
                 script {
-                    env.NETLIFY_STAGE_URL = sh(script: "npx node-jq -r '.deploy_url' netlify-deploy-stage.json", returnStdout: true).trim()
+                    env.NETLIFY_STAGE_URL = sh(
+                        script: "npx node-jq -r '.deploy_url' netlify-deploy-stage.json",
+                        returnStdout: true
+                    ).trim()
                 }
             }
         }
+
         stage('Staging E2E Test') {
-
-                environment {
-                    CI_ENVIRONMENT_URL = "${env.NETLIFY_STAGE_URL}"
-                }
-                steps {
-                    sh '''
-                    npx playwright test --reporter=html
-                    '''
-                }
-                post {
-                always {
-                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Staging E2E Test', reportTitles: '', useWrapperFileDirectly: true])
-                }
-                }
-        }
-        stage('Deploy Production') {
-
+            environment {
+                CI_ENVIRONMENT_URL = "${env.NETLIFY_STAGE_URL}"
+            }
             steps {
                 sh '''
-                npx netlify --version
-                echo "Deploying to Netlify, Site ID: ${NETLIFY_SITE_ID}"
-                npx netlify status
-                ls -lah
-                npx netlify deploy \
-                --prod \
-                --dir=build \
-                --no-build \
-                --site $NETLIFY_SITE_ID \
-                --auth $NETLIFY_AUTH_TOKEN \
-                --json > netlify-deploy-prod.json
+                    npx playwright test --workers=4 --reporter=html
                 '''
-                script {
-                    env.NETLIFY_PROD_URL = sh(script: "npx node-jq -r '.url' netlify-deploy-prod.json", returnStdout: true).trim()
+            }
+            post {
+                always {
+                    publishHTML([
+                        allowMissing: false,
+                        keepAll: false,
+                        reportDir: 'playwright-report',
+                        reportFiles: 'index.html',
+                        reportName: 'Staging E2E Test',
+                        useWrapperFileDirectly: true
+                    ])
                 }
             }
         }
-        stage('Prod (E2E) Test') {
 
-                    environment {
-                        CI_ENVIRONMENT_URL = "${env.NETLIFY_PROD_URL}"
-                    }
-                    steps {
-                        sh '''
-                        npx playwright test --reporter=html
-                        '''
-                    }
-                    post {
-                        always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod - Playwright HTML Report', reportTitles: 'Prod - Playwright HTML Report', useWrapperFileDirectly: true])
-                        }
-                    }
+        stage('Deploy Production') {
+            steps {
+                sh '''
+                    echo "Deploying to production..."
+                    npx netlify deploy \
+                        --yes \
+                        --prod \
+                        --dir=build \
+                        --no-build \
+                        --site $NETLIFY_SITE_ID \
+                        --auth $NETLIFY_AUTH_TOKEN \
+                        --json > netlify-deploy-prod.json
+                '''
+                script {
+                    env.NETLIFY_PROD_URL = sh(
+                        script: "npx node-jq -r '.url' netlify-deploy-prod.json",
+                        returnStdout: true
+                    ).trim()
+                }
+            }
+        }
+
+        stage('Prod (E2E) Test') {
+            environment {
+                CI_ENVIRONMENT_URL = "${env.NETLIFY_PROD_URL}"
+            }
+            steps {
+                sh '''
+                    npx playwright test --workers=4 --reporter=html
+                '''
+            }
+            post {
+                always {
+                    publishHTML([
+                        allowMissing: false,
+                        keepAll: false,
+                        reportDir: 'playwright-report',
+                        reportFiles: 'index.html',
+                        reportName: 'Prod - Playwright HTML Report',
+                        useWrapperFileDirectly: true
+                    ])
+                }
+            }
         }
     }
 }
