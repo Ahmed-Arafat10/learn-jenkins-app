@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'my-playwright'
+            reuseNode true
+        }
+    }
     environment {
         // Note: Netfliy check for env variable called NETLIFY_SITE_ID to identify the site, so we need to use that name
         NETLIFY_SITE_ID = credentials('netlify-site-id')
@@ -15,13 +20,7 @@ pipeline {
         //     }
         // }
         stage('Build') {
-            agent {
-                docker {
-                    image 'my-playwright'
-                    // not required
-                    reuseNode true
-                }
-            }
+            
             steps {
                 sh '''
                     echo "=== Workspace before build ==="
@@ -45,13 +44,7 @@ pipeline {
         stage('Tests') {
             parallel {
                 stage('Unit Test') {
-                    agent {
-                        docker {
-                            //Note: not same node version as above
-                            image 'my-playwright'
-                            reuseNode true
-                        }
-                    }
+
                     steps {
                         sh '''
                         test -f build/index.html
@@ -65,13 +58,7 @@ pipeline {
                     }
                 }
                 stage('End-to-End (E2E) Test') {
-                    agent {
-                        docker {
-                            // any other version will not work
-                            image 'my-playwright'
-                            reuseNode true
-                        }
-                    }
+
                     steps {
                         sh '''
                         npx serve -s build &
@@ -88,12 +75,7 @@ pipeline {
             }
         }
         stage('Deploy In Staging') {
-            agent {
-                docker {
-                    image 'my-playwright'
-                    reuseNode true
-                }
-            }
+
             steps {
                 sh '''
                     npx netlify --version
@@ -112,13 +94,7 @@ pipeline {
             }
         }
         stage('Staging E2E Test') {
-                agent {
-                    docker {
-                        // any other version will not work
-                        image 'my-playwright'
-                        reuseNode true
-                    }
-                }
+
                 environment {
                     CI_ENVIRONMENT_URL = "${env.NETLIFY_STAGE_URL}"
                 }
@@ -134,12 +110,7 @@ pipeline {
                 }
         }
         stage('Deploy Production') {
-            agent {
-                docker {
-                    image 'my-playwright'
-                    reuseNode true
-                }
-            }
+
             steps {
                 sh '''
                 npx netlify --version
@@ -160,13 +131,7 @@ pipeline {
             }
         }
         stage('Prod (E2E) Test') {
-                    agent {
-                        docker {
-                            // any other version will not work
-                            image 'my-playwright'
-                            reuseNode true
-                        }
-                    }
+
                     environment {
                         CI_ENVIRONMENT_URL = "${env.NETLIFY_PROD_URL}"
                     }
