@@ -1,0 +1,20 @@
+pipeline {
+  agent any
+
+  stages {
+    stage('Build Custom AWS CLI Docker Image') {
+      steps {
+        sh '''
+          docker build -f nightly-jenkins/Dockerfile-aws-cli -t custom-aws-cli .
+        '''
+      }
+    }
+    stage('Build Docker Image') {
+      steps {
+        sh '''
+          docker build -f nightly-jenkins/Dockerfile-playwright -t my-playwright .
+        '''
+      }
+    }
+  }
+}
