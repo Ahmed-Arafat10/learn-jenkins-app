@@ -1,0 +1,23 @@
+pipeline {
+    agent any
+    stages {
+        stage('Deploy to AWS ECS') {
+            agent {
+                docker {
+                    image 'amazon/aws-cli'
+                    reuseNode true
+                    args "--entrypoint ''"
+                }
+            }
+            
+            steps {
+               withCredentials([usernamePassword(credentialsId: 'aws-ecs', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                    aws --version
+                    aws register-task-definition --cli-input-json file://aws/task-definition-prod.json
+                    '''
+                }
+            }
+        }
+    }
+}
