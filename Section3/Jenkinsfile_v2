@@ -1,3 +1,4 @@
+/* groovylint-disable DuplicateStringLiteral, NestedBlockDepth */
 pipeline {
     agent any
     environment {
@@ -8,7 +9,7 @@ pipeline {
         REACT_APP_VERSION = "1.0.$BUILD_ID" // Example of using Jenkins build number as part of app version
     }
     stages {
-        // build in mightly jenkins pipeline, but not in main pipeline, because we want to build the docker image only once a day, and use it for all the builds in that day
+        // build in nightly jenkins pipeline, but not in main pipeline, because we want to build the docker image only once a day, and use it for all the builds in that day
         // stage('Docker') {
         //     steps {
         //         sh 'docker build -t my-playwright .'
@@ -160,26 +161,26 @@ pipeline {
             }
         }
         stage('Prod (E2E) Test') {
-                    agent {
-                        docker {
-                            // any other version will not work
-                            image 'my-playwright'
-                            reuseNode true
-                        }
+                agent {
+                    docker {
+                        // any other version will not work
+                        image 'my-playwright'
+                        reuseNode true
                     }
-                    environment {
-                        CI_ENVIRONMENT_URL = "${env.NETLIFY_PROD_URL}"
+                }
+                environment {
+                    CI_ENVIRONMENT_URL = "${env.NETLIFY_PROD_URL}"
+                }
+                steps {
+                    sh '''
+                    npx playwright test --reporter=html
+                    '''
+                }
+                post {
+                    always {
+                        publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod - Playwright HTML Report', reportTitles: 'Prod - Playwright HTML Report', useWrapperFileDirectly: true])
                     }
-                    steps {
-                        sh '''
-                        npx playwright test --reporter=html
-                        '''
-                    }
-                    post {
-                        always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod - Playwright HTML Report', reportTitles: 'Prod - Playwright HTML Report', useWrapperFileDirectly: true])
-                        }
-                    }
+                }
         }
     }
 }
