@@ -1,33 +1,33 @@
 pipeline {
     agent any
     stages {
-        // stage('Build App') {
-        //     agent {
-        //         docker {
-        //             image 'node:18-alpine'
-        //             reuseNode true
-        //         }
-        //     }
-        //     steps {
-        //         sh '''
-        //         echo "=== Workspace before build ==="
-        //         ls  -lah
+        stage('Build App') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                echo "=== Workspace before build ==="
+                ls  -lah
 
-        //         echo "=== Node & NPM versions ==="
-        //         node -v
-        //         npm -v
+                echo "=== Node & NPM versions ==="
+                node -v
+                npm -v
 
-        //         echo "=== Installing dependencies ==="
-        //         npm ci
+                echo "=== Installing dependencies ==="
+                npm ci
 
-        //         echo "=== Running build ==="
-        //         npm run build
+                echo "=== Running build ==="
+                npm run build
 
-        //         echo "=== Workspace after build ==="
-        //         ls -lah
-        //         '''
-        //     }
-        // }
+                echo "=== Workspace after build ==="
+                ls -lah
+                '''
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 sh '''
