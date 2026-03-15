@@ -9,17 +9,18 @@ pipeline {
                 docker {
                     image 'amazon/aws-cli'
                     reuseNode true
-                    args "--entrypoint ''"
+                    args "-u root --entrypoint ''"
                 }
             }
             steps {
                withCredentials([usernamePassword(credentialsId: 'aws-ecs', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
                     sh '''
+                    yum install -y jq
                     aws --version
-                    aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod.json
+                    LATEST_TD_REVISION=$(aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod.json | jq '.taskDefinition.revision')
                     aws ecs update-service \
                      --service learn-jenkins-app-task-definition-prod-service-vd0czv2v \
-                     --task-definition learn-jenkins-app-task-definition-prod \
+                     --task-definition learn-jenkins-app-task-definition-prod:$LATEST_TD_REVISION \
                      --cluster LearnJenkinsAppClusterProd
                     '''
                 }
