@@ -44,7 +44,7 @@ pipeline {
             }
             steps {
                 sh '''
-                amazon-linux-extras install docker
+                yum install docker -y
                 docker build -t custom-nginx .
                 '''
             }
