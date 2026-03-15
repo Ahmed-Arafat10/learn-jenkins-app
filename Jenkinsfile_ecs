@@ -2,6 +2,9 @@ pipeline {
     agent any
     environment {
         AWS_DEFAULT_REGION = 'us-east-1'
+        AWS_ECS_CLUSTER = 'LearnJenkinsAppClusterProd'
+        AWS_ECS_SERVICE_PROD = 'learn-jenkins-app-task-definition-prod-service-vd0czv2v'
+        AWS_ECS_TD_PROD = 'learn-jenkins-app-task-definition-prod'
     }
     stages {
         stage('Deploy to AWS ECS') {
@@ -18,10 +21,17 @@ pipeline {
                     yum install -y jq
                     aws --version
                     LATEST_TD_REVISION=$(aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod.json | jq '.taskDefinition.revision')
+                    
                     aws ecs update-service \
-                     --service learn-jenkins-app-task-definition-prod-service-vd0czv2v \
-                     --task-definition learn-jenkins-app-task-definition-prod:$LATEST_TD_REVISION \
-                     --cluster LearnJenkinsAppClusterProd
+                     --service $AWS_ECS_SERVICE_PROD \
+                     --task-definition $AWS_ECS_TD_PROD:$LATEST_TD_REVISION \
+                     --cluster $AWS_ECS_CLUSTER
+
+                    aws ecs wait services-stable \
+                     --services $AWS_ECS_SERVICE_PROD \
+                     --cluster $AWS_ECS_CLUSTER
+
+                    echo "Deployment to AWS ECS completed successfully." 
                     '''
                 }
             }
