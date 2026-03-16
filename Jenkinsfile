@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        REACT_APP_VERSION = '1.0.$BUILD_NUMBER'
+        REACT_APP_VERSION = "1.0.$BUILD_NUMBER"
         APP_NAME = 'learn-jenkins-app'
         AWS_DEFAULT_REGION = 'us-east-1'
         AWS_ECS_CLUSTER = 'LearnJenkinsAppClusterProd'
