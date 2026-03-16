@@ -1,6 +1,8 @@
 pipeline {
     agent any
     environment {
+        REACT_APP_VERSION = '1.0.$BUILD_NUMBER'
+        APP_NAME = 'learn-jenkins-app'
         AWS_DEFAULT_REGION = 'us-east-1'
         AWS_ECS_CLUSTER = 'LearnJenkinsAppClusterProd'
         AWS_ECS_SERVICE_PROD = 'learn-jenkins-app-task-definition-prod-service-vd0czv2v'
@@ -44,7 +46,7 @@ pipeline {
             }
             steps {
                 sh '''
-                docker build -t custom-nginx .
+                docker build -t $APP_NAME:$REACT_APP_VERSION .
                 '''
             }
         }
