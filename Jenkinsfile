@@ -84,8 +84,8 @@ pipeline {
 
                 echo "Deployment to AWS ECS completed successfully."
                 '''
+                }
             }
-        }
-    }
+       }   
     }
 }
