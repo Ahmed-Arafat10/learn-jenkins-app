@@ -7,6 +7,7 @@ pipeline {
         AWS_ECS_CLUSTER = 'LearnJenkinsAppClusterProd'
         AWS_ECS_SERVICE_PROD = 'learn-jenkins-app-task-definition-prod-service-vd0czv2v'
         AWS_ECS_TD_PROD = 'learn-jenkins-app-task-definition-prod'
+        AWS_DOCKER_REGISTRY = '508261693782.dkr.ecr.us-east-1.amazonaws.com'
     }
     stages {
         stage('Build App') {
@@ -45,9 +46,16 @@ pipeline {
                 }
             }
             steps {
-                sh '''
-                docker build -t $APP_NAME:$REACT_APP_VERSION .
-                '''
+                withCredentials([usernamePassword(credentialsId: 'aws-ecr', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                    docker build -t $AWS_DOCKER_REGISTRY/$APP_NAME:$REACT_APP_VERSION .
+                    docker loign
+                    --username AWS
+                    --password $(aws ecr get-login-password --region $AWS_DEFAULT_REGION)
+                    $AWS_DOCKER_REGISTRY
+                    docker push $AWS_DOCKER_REGISTRY/$APP_NAME:$REACT_APP_VERSION
+                    '''
+                }
             }
         }
         // stage('Deploy to AWS ECS') {
@@ -73,10 +81,10 @@ pipeline {
         //              --services $AWS_ECS_SERVICE_PROD \
         //              --cluster $AWS_ECS_CLUSTER
 
-        //             echo "Deployment to AWS ECS completed successfully."
-        //             '''
-        //         }
-        //     }
-        // }
+    //             echo "Deployment to AWS ECS completed successfully."
+    //             '''
+    //         }
+    //     }
+    // }
     }
 }
