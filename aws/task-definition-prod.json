@@ -6,7 +6,7 @@
     "containerDefinitions": [
         {
             "name": "Learn-Jenkins-App",
-            "image": "nginx:1.27-alpine",
+            "image": "508261693782.dkr.ecr.us-east-1.amazonaws.com/practice-jenkins-ecs-ecr-app:1.0.24",
             "essential": true,
             "portMappings": [
                 {
@@ -23,5 +23,5 @@
     "networkMode": "awsvpc",
     "memory": "512",
     "cpu": "256",
-    "executionRoleArn": ""
+    "executionRoleArn": "arn:aws:iam::508261693782:role/ecsTaskExecutionRole"
 }
