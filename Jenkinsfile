@@ -50,33 +50,33 @@ pipeline {
                 '''
             }
         }
-        stage('Deploy to AWS ECS') {
-            agent {
-                docker {
-                    image 'custom-aws-cli'
-                    reuseNode true
-                    args "--entrypoint ''"  //root not needed here
-                }
-            }
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'aws-ecs', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                    sh '''
-                    aws --version
-                    LATEST_TD_REVISION=$(aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod.json | jq '.taskDefinition.revision')
+        // stage('Deploy to AWS ECS') {
+        //     agent {
+        //         docker {
+        //             image 'custom-aws-cli'
+        //             reuseNode true
+        //             args "--entrypoint ''"  //root not needed here
+        //         }
+        //     }
+        //     steps {
+        //         withCredentials([usernamePassword(credentialsId: 'aws-ecs', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+        //             sh '''
+        //             aws --version
+        //             LATEST_TD_REVISION=$(aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod.json | jq '.taskDefinition.revision')
 
-                    aws ecs update-service \
-                     --service $AWS_ECS_SERVICE_PROD \
-                     --task-definition $AWS_ECS_TD_PROD:$LATEST_TD_REVISION \
-                     --cluster $AWS_ECS_CLUSTER
+        //             aws ecs update-service \
+        //              --service $AWS_ECS_SERVICE_PROD \
+        //              --task-definition $AWS_ECS_TD_PROD:$LATEST_TD_REVISION \
+        //              --cluster $AWS_ECS_CLUSTER
 
-                    aws ecs wait services-stable \
-                     --services $AWS_ECS_SERVICE_PROD \
-                     --cluster $AWS_ECS_CLUSTER
+        //             aws ecs wait services-stable \
+        //              --services $AWS_ECS_SERVICE_PROD \
+        //              --cluster $AWS_ECS_CLUSTER
 
-                    echo "Deployment to AWS ECS completed successfully."
-                    '''
-                }
-            }
-        }
+        //             echo "Deployment to AWS ECS completed successfully."
+        //             '''
+        //         }
+        //     }
+        // }
     }
 }
