@@ -6,7 +6,7 @@
     "containerDefinitions": [
         {
             "name": "Learn-Jenkins-App",
-            "image": "508261693782.dkr.ecr.us-east-1.amazonaws.com/practice-jenkins-ecs-ecr-app:1.0.24",
+            "image": "508261693782.dkr.ecr.us-east-1.amazonaws.com/practice-jenkins-ecs-ecr-app:#APP_VERSION#",
             "essential": true,
             "portMappings": [
                 {
